@@ -22,12 +22,15 @@ for (uint64_t c = 0; c < entry->base.in_size; c++){
 ```
 ## Advance Implementation
 ### Pooling Layer
+![image](https://github.com/yuanciou/Domain-Specific-Accelerator/blob/main/img/fsm_pooling.png)
 At the memory address `0xC400_0024`, the value `dxmax * dymax` is read and assigned to `pool_img_size_i`. A counter is then used to determine the required indices of the `in[]` array, where the index is precomputed in software. Once all data is read, the state transitions back to `P_IDLE`. 
 
 Next, the address `0xC400_002C` is set as the calculating trigger. Upon being triggered, the DSA utilizes a floating-point add IP to sum all the values stored in `in[]`. After the summation, the result is multiplied by `scale_factor_` using the multiply IP. For the average pooling operation, `scale_factor_` is directly set to `0.25`, which is represented in floating-point format as `0x3e800000`. 
 
 Once the computation is complete, the trigger is set to `0`, exiting the busy waiting state in the while loop. Finally, the result is stored at address `0xC400_0030`, completing one iteration of the operation.
 ### Converlution Layer
+![image](https://github.com/yuanciou/Domain-Specific-Accelerator/blob/main/img/fsm_conv3d.png)
+![image](https://github.com/yuanciou/Domain-Specific-Accelerator/blob/main/img/dsa_conv3d.png)
 1. The two main data components, the input image and weights, are preloaded into the circuit.  
 2. Registers are used to store these data, simplifying the I/O process. The RAM style is set to "block" to ensure that the registers storing these data are synthesized as block RAM instead of using LUTs.  
 3. The `conv_3d()` circuit is controlled using an FSM. After loading the necessary parameters, the FSM initializes the output register at address `0xC430_0000`. Once initialization is complete, it transitions to the `load weight` and `load image data` states to load the corresponding data. During this time, the software enters a busy waiting state until the FSM returns to `S_IDLE`. Since the weight width is 5, 25 inner product operations are performed per round. After each round, the FSM transitions to `S_STORE` to save the results to the output register. Once all inner product operations are completed, the FSM returns to `S_IDLE`, exiting the busy waiting state.  
