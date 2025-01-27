@@ -2,6 +2,7 @@
 ## Abstract
 This project implements a **Domain-Specific Accelerator (DSA)** on the **Aquila processor** using **Memory-Mapped I/O (MMIO)**. By leveraging Vivado to add custom IPs or modify circuits on Aquila, the execution time of a CNN model was significantly reduced. The final results achieved a **20x speedup** in performance.
 ## Basic Concept of DSA
+![image](https://github.com/yuanciou/Domain-Specific-Accelerator/blob/main/img/basic_structure.png)
 ### MMIO
 Through **Memory-Mapped I/O (MMIO)**, communication between the software and the DSA on the Aquila processor is enabled. According to the comments in `soc_top.v` under the device address decoder, the memory address range `0xC400_0000` to `0xC4FF_FFFF` is reserved for the DSA. This means that when load/store instructions access this memory address range, `soc_top.v` uses the signal `dsa_sel` to select the DSA device. The data to be stored is sent to the DSA, and the data output from the DSA is retrieved through the load operation.
 ### Floating Point IP
